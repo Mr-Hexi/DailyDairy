@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +24,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#zpm91e6l)i7$w4vz4&ydvwn64&a#i4roe3qn5n*aw(st$q4q)'
+# Fallback to the local dev key if the env variable isn't set
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY', 
+    'django-insecure-#zpm91e6l)i7$w4vz4&ydvwn64&a#i4roe3qn5n*aw(st$q4q)'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# Put your VM's Public IP here or read from env. e.g. '4.240.38.147'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -128,6 +137,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Required for collectstatic on the VM
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
