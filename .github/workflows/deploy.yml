@@ -18,7 +18,7 @@ jobs:
           port: 22
           source: "."
           target: ${{ secrets.SERVER_PATH }}
-          rm: true
+          rm: false
       - name: Execute remote commands
         uses: appleboy/ssh-action@master
         with:
