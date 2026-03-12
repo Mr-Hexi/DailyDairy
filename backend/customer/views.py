@@ -53,3 +53,27 @@ class AdminCustomerListView(APIView):
         customers = Customer.objects.all()
         serializer = CustomerSerializer(customers, many=True)
         return Response(serializer.data)
+
+class AdminCustomerDetailView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def put(self, request, pk):
+        try:
+            customer = Customer.objects.get(pk=pk)
+        except Customer.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = CustomerSerializer(customer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            customer = Customer.objects.get(pk=pk)
+        except Customer.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        customer.delete()
+        return Response({'detail': 'Customer deleted'}, status=status.HTTP_204_NO_CONTENT)

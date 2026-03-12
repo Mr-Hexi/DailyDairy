@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 
 // Components
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 // Pages
 import Home from './pages/customer/Home';
@@ -17,17 +18,20 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen font-sans text-gray-900 bg-gray-50">
+        <div className="flex flex-col min-h-screen font-sans text-gray-900 bg-gray-50">
           <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          </Routes>
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            </Routes>
+          </main>
+          <Footer />
         </div>
       </AuthProvider>
     </Router>
