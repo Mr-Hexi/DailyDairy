@@ -36,6 +36,6 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
             python manage.py migrate
-            sudo systemctl restart dailydairy
+            pm2 restart dhango
             sudo systemctl restart nginx
             echo "Deployment finished!"
