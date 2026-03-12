@@ -59,7 +59,7 @@ const Cart = () => {
 
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 border-b border-slate-100 pb-10 mb-10">
                         {product.image ? (
-                            <img src={`http://localhost:8000${product.image}`} alt={product.name} className="object-cover w-32 h-32 rounded-2xl shadow-sm" />
+                            <img src={`${import.meta.env.VITE_MEDIA_URL}${product.image}`} alt={product.name} className="object-cover w-32 h-32 rounded-2xl shadow-sm" />
                         ) : (
                             <div className="flex items-center justify-center w-32 h-32 bg-slate-100 rounded-2xl text-slate-400 font-medium">No Image</div>
                         )}

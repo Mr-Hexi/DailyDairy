@@ -19,7 +19,7 @@ const AdminDashboard = () => {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return '';
         if (imagePath.startsWith('http')) return imagePath;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const baseUrl = import.meta.env.VITE_MEDIA_URL || 'http://localhost:8000';
         return `${baseUrl.replace(/\/api\/?$/, '')}${imagePath}`;
     };
 
