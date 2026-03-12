@@ -28,8 +28,8 @@ jobs:
           port: 22
           script: |
             cd /home/azureuser/DailyDairy/frontend
-            echo "VITE_API_BASE_URL=https://dailydairy.duckdns.org/api/" > .env
-            echo "VITE_MEDIA_URL=https://dailydairy.duckdns.org" >> .env
+            echo "VITE_API_BASE_URL=https://dailydairyapi.duckdns.org/api/" > .env
+            echo "VITE_MEDIA_URL=https://dailydairyapi.duckdns.org" >> .env
             npm install
             npm run build
             cd /home/azureuser/DailyDairy/backend
