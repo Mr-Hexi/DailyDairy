@@ -27,13 +27,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            cd /home/azureuser/DailyDairy/frontend
+            echo "VITE_API_BASE_URL=http://dailydairy.duckdns.org/api/" > .env
+            echo "VITE_MEDIA_URL=http://dailydairy.duckdns.org" >> .env
+            npm install
+            npm run build
             cd /home/azureuser/DailyDairy/backend
             source venv/bin/activate
             pip install -r requirements.txt
             python manage.py migrate
             sudo systemctl restart dailydairy
-            cd /home/azureuser/DailyDairy/frontend
-            npm install
-            npm run build
             sudo systemctl restart nginx
             echo "Deployment finished!"
