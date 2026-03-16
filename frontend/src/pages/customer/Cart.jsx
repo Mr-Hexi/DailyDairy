@@ -2,6 +2,45 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axios';
 
+const addMonthsClamped = (date, months = 1) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + months;
+    const day = date.getDate();
+
+    const firstOfTarget = new Date(year, month, 1);
+    const lastDay = new Date(firstOfTarget.getFullYear(), firstOfTarget.getMonth() + 1, 0).getDate();
+    return new Date(firstOfTarget.getFullYear(), firstOfTarget.getMonth(), Math.min(day, lastDay));
+};
+
+const calculateDeliveryCount = (startDateStr, endDateStr, frequency) => {
+    if (!startDateStr) return 0;
+
+    const startDate = new Date(`${startDateStr}T00:00:00`);
+    const endDate = endDateStr ? new Date(`${endDateStr}T00:00:00`) : null;
+
+    if (!endDate) return 1;
+    if (endDate < startDate) return 0;
+
+    let count = 0;
+    let current = new Date(startDate);
+
+    if (frequency === 'monthly') {
+        while (current <= endDate) {
+            count += 1;
+            current = addMonthsClamped(current, 1);
+        }
+        return count;
+    }
+
+    const stepDays = frequency === 'alternate_days' ? 2 : frequency === 'weekly' ? 7 : 1;
+    while (current <= endDate) {
+        count += 1;
+        current.setDate(current.getDate() + stepDays);
+    }
+
+    return count;
+};
+
 const Cart = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -9,6 +48,8 @@ const Cart = () => {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState('card');
+    const [gatewayScenario, setGatewayScenario] = useState('success');
 
     if (!subscriptionData || !product) {
         return (
@@ -24,7 +65,12 @@ const Cart = () => {
         );
     }
 
-    const estimatedTotal = (product.price * subscriptionData.quantity).toFixed(2);
+    const deliveryCount = calculateDeliveryCount(
+        subscriptionData.start_date,
+        subscriptionData.end_date,
+        subscriptionData.delivery_frequency
+    );
+    const estimatedTotal = (Number(product.price) * Number(subscriptionData.quantity) * deliveryCount).toFixed(2);
 
     const handleConfirmOrder = async () => {
         setLoading(true);
@@ -34,13 +80,24 @@ const Cart = () => {
             const subRes = await axiosInstance.post('subscription/', subscriptionData);
 
             // 2. Process Mock Payment for the first delivery / subscription cycle
-            await axiosInstance.post('payment/process/', {
+            const paymentRes = await axiosInstance.post('payment/process/', {
                 subscription_id: subRes.data.id,
-                amount: estimatedTotal,
-                payment_method: 'card' // Mocking card payment
+                payment_method: paymentMethod,
+                gateway_scenario: gatewayScenario
             });
 
-            navigate('/profile', { state: { message: 'Subscription confirmed successfully!' } });
+            const paymentStatus = paymentRes.data?.data?.payment_status;
+            if (paymentStatus === 'completed') {
+                navigate('/profile', { state: { message: 'Subscription confirmed successfully!' } });
+                return;
+            }
+
+            if (paymentStatus === 'pending') {
+                navigate('/profile', { state: { message: 'Payment is pending. Subscription is paused until payment is completed.' } });
+                return;
+            }
+
+            setError('Payment failed. Subscription was not activated.');
         } catch (err) {
             console.error("Order error", err);
             setError("Failed to process order. Please try again.");
@@ -85,6 +142,40 @@ const Cart = () => {
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
                             <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">End Date</span>
                             <span className="text-lg font-black text-slate-800">{subscriptionData.end_date || 'Ongoing'}</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-6 text-sm font-semibold text-slate-500">
+                        Billing for {deliveryCount} delivery{deliveryCount !== 1 ? 'ies' : 'y'} in the selected range.
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Payment Method</label>
+                            <select
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                                disabled={loading}
+                            >
+                                <option value="card">Credit / Debit Card</option>
+                                <option value="upi">UPI</option>
+                                <option value="netbanking">Net Banking</option>
+                                <option value="cash">Cash on Delivery</option>
+                            </select>
+                        </div>
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Mock Gateway Mode</label>
+                            <select
+                                value={gatewayScenario}
+                                onChange={(e) => setGatewayScenario(e.target.value)}
+                                className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                                disabled={loading}
+                            >
+                                <option value="success">Success</option>
+                                <option value="pending">Pending</option>
+                                <option value="failure">Failure</option>
+                            </select>
                         </div>
                     </div>
 

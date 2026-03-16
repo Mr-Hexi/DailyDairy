@@ -17,11 +17,12 @@ class ProcessPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = PaymentProcessSerializer(data=request.data)
+        serializer = PaymentProcessSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            payment = serializer.save(customer=request.user)
+            payment, gateway = serializer.save(customer=request.user)
             return Response({
                 'detail': 'Payment processed successfully',
-                'data': PaymentSerializer(payment).data
+                'data': PaymentSerializer(payment).data,
+                'gateway': gateway,
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
